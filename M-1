@@ -1,125 +1,129 @@
 import tkinter as tk
 
-root = tk.Tk()
-root.title("The Box")
+class BoxGame:
+    def __init__(self, root, title, score_multiplier=1, upgrade_multiplier=1):
+        self.root = root
+        self.root.title(title)
+        self.score = 0
+        self.score_per_click = 1
+        self.score_multiplier = score_multiplier
+        self.upgrade_multiplier = upgrade_multiplier
+        self.auto_increment_cost = 50 * upgrade_multiplier
+        self.auto_increment_active = False
+        self.auto_increment_amount = 0.1
+        self.auto_increment_speed = 1000  # in milliseconds
+        self.min_increment_speed = 100  # minimum speed limit
+        self.reset_cost = 100
+        self.reset_count = 0
+        self.base_increment_amount = 0.1  # Base amount for auto-increment
+        self.upgrade_cost = 10 * upgrade_multiplier
+        self.speed_upgrade_cost = 30 * upgrade_multiplier
+        self.amount_upgrade_cost = 40 * upgrade_multiplier
+        self.setup_ui()
 
-# Initial score and upgrade variables
-score = 0
-score_per_click = 1
-upgrade_cost = 10
-auto_increment_cost = 50
-auto_increment_active = False
-auto_increment_amount = 0.1
-auto_increment_speed = 1000  # in milliseconds
-speed_upgrade_cost = 30
-amount_upgrade_cost = 40
-reset_cost = 100
-reset_count = 0
-base_increment_amount = 0.1  # Base amount for auto-increment
+    def setup_ui(self):
+        # Clickable box button
+        box_btn = tk.Button(self.root, text="📦 Box", command=lambda: self.update_score(self.score_per_click))
+        box_btn.pack()
 
-# Function to update score
-def update_score(amount=1):
-    global score
-    score += amount
-    rounded_score = round(score)
-    score_label.config(text="Score: " + str(rounded_score))
+        # Score label
+        self.score_label = tk.Label(self.root, text="Score: 0")
+        self.score_label.pack()
 
-# Auto-increment function
-def auto_increment():
-    global auto_increment_speed
-    if auto_increment_active:
-        update_score(auto_increment_amount)
-        root.after(auto_increment_speed, auto_increment)
+        # Upgrade click button
+        self.upgrade_button = tk.Button(self.root, text=f"Upgrade Click (Cost: {self.upgrade_cost})", command=self.purchase_click_upgrade)
+        self.upgrade_button.pack()
 
-# Function to purchase click upgrade
-def purchase_click_upgrade():
-    global score, score_per_click, upgrade_cost
-    if score >= upgrade_cost:
-        score -= upgrade_cost
-        score_per_click += 1
-        upgrade_cost *= 2
-        upgrade_button.config(text=f"Upgrade Click (Cost: {upgrade_cost})")
-        score_label.config(text="Score: " + str(score))
+        # Auto-increment button
+        self.auto_increment_button = tk.Button(self.root, text=f"Buy Auto-Increment (Cost: {self.auto_increment_cost})", command=self.purchase_auto_increment)
+        self.auto_increment_button.pack()
 
-# Function to purchase auto-increment upgrade
-def purchase_auto_increment():
-    global score, auto_increment_active
-    if score >= auto_increment_cost and not auto_increment_active:
-        score -= auto_increment_cost
-        auto_increment_active = True
-        auto_increment_button.config(text="Auto-Increment Active", state=tk.DISABLED)
-        auto_increment()
+        # Upgrade auto-increment speed button
+        self.speed_upgrade_button = tk.Button(self.root, text=f"Upgrade Speed (Cost: {self.speed_upgrade_cost})", command=self.upgrade_speed)
+        self.speed_upgrade_button.pack()
 
-# Function to upgrade auto-increment speed
-def upgrade_speed():
-    global score, auto_increment_speed, speed_upgrade_cost
-    if score >= speed_upgrade_cost and auto_increment_speed > 100:
-        score -= speed_upgrade_cost
-        auto_increment_speed -= 100  # Decrease interval by 100ms
-        speed_upgrade_cost *= 2
-        speed_upgrade_button.config(text=f"Upgrade Speed (Cost: {speed_upgrade_cost})")
-        score_label.config(text="Score: " + str(score))
+        # Upgrade auto-increment amount button
+        self.amount_upgrade_button = tk.Button(self.root, text=f"Upgrade Amount (Cost: {self.amount_upgrade_cost})", command=self.upgrade_amount)
+        self.amount_upgrade_button.pack()
 
-# Function to upgrade auto-increment amount
-def upgrade_amount():
-    global score, auto_increment_amount, amount_upgrade_cost
-    if score >= amount_upgrade_cost:
-        score -= amount_upgrade_cost
-        auto_increment_amount += 0.1  # Increase amount per auto-click
-        amount_upgrade_cost *= 2
-        amount_upgrade_button.config(text=f"Upgrade Amount (Cost: {amount_upgrade_cost})")
-        score_label.config(text="Score: " + str(score))
+        # Reset button
+        self.reset_button = tk.Button(self.root, text=f"Reset (Cost: {self.reset_cost})", command=self.reset_game)
+        self.reset_button.pack()
 
-# Function to reset the game
-def reset_game():
-    global score, reset_cost, reset_count, auto_increment_amount, auto_increment_active, score_per_click
-    if score >= reset_cost:
-        # Reset score and all upgrades
-        score = 0
-        score_per_click = 1
-        auto_increment_active = False
-        auto_increment_button.config(text="Buy Auto-Increment (Cost: 50)", state=tk.NORMAL)
+        # Reset count label
+        self.reset_count_label = tk.Label(self.root, text="Resets: 0")
+        self.reset_count_label.pack()
 
-        # Apply benefits of reset
-        reset_cost *= 3
-        reset_count += 1
-        auto_increment_amount = base_increment_amount * (2 ** reset_count)
+    def update_score(self, amount=1):
+        self.score += amount * self.score_multiplier
+        rounded_score = round(self.score)
+        self.score_label.config(text="Score: " + str(rounded_score))
 
-        # Update UI
-        reset_button.config(text=f"Reset (Cost: {reset_cost})")
-        reset_count_label.config(text=f"Resets: {reset_count}")
-        update_score(0)
+    def auto_increment(self):
+        if self.auto_increment_active:
+            self.update_score(self.auto_increment_amount)
+            self.root.after(self.auto_increment_speed, self.auto_increment)
 
-# Clickable box button
-box_btn = tk.Button(root, text="📦 Box", command=lambda: update_score(score_per_click))
-box_btn.pack()
+    def purchase_click_upgrade(self):
+        if self.score >= self.upgrade_cost:
+            self.score -= self.upgrade_cost
+            self.score_per_click += 1
+            self.upgrade_cost *= 2
+            self.upgrade_button.config(text=f"Upgrade Click (Cost: {self.upgrade_cost})")
+            self.update_score(0)
 
-# Score label
-score_label = tk.Label(root, text="Score: 0")
-score_label.pack()
+    def purchase_auto_increment(self):
+        if self.score >= self.auto_increment_cost and not self.auto_increment_active:
+            self.score -= self.auto_increment_cost
+            self.auto_increment_active = True
+            self.auto_increment_button.config(text="Auto-Increment Active", state=tk.DISABLED)
+            self.auto_increment()
 
-# Upgrade click button
-upgrade_button = tk.Button(root, text=f"Upgrade Click (Cost: {upgrade_cost})", command=purchase_click_upgrade)
-upgrade_button.pack()
+    def upgrade_speed(self):
+        if self.score >= self.speed_upgrade_cost and self.auto_increment_speed > self.min_increment_speed:
+            self.score -= self.speed_upgrade_cost
+            self.auto_increment_speed -= 100  # Decrease interval by 100ms
+            self.speed_upgrade_cost *= 2
+            self.speed_upgrade_button.config(text=f"Upgrade Speed (Cost: {self.speed_upgrade_cost})")
+            self.update_score(0)
 
-# Auto-increment button
-auto_increment_button = tk.Button(root, text=f"Buy Auto-Increment (Cost: 50)", command=purchase_auto_increment)
-auto_increment_button.pack()
+    def upgrade_amount(self):
+        if self.score >= self.amount_upgrade_cost:
+            self.score -= self.amount_upgrade_cost
+            self.auto_increment_amount += 0.1  # Increase amount per auto-click
+            self.amount_upgrade_cost *= 2
+            self.amount_upgrade_button.config(text=f"Upgrade Amount (Cost: {self.amount_upgrade_cost})")
+            self.update_score(0)
 
-# Upgrade auto-increment speed button
-speed_upgrade_button = tk.Button(root, text=f"Upgrade Speed (Cost: {speed_upgrade_cost})", command=upgrade_speed)
-speed_upgrade_button.pack()
+    def reset_game(self):
+        if self.score >= self.reset_cost:
+            # Reset score and all upgrades
+            self.score = 0
+            self.score_per_click = 1
+            self.auto_increment_active = False
+            self.auto_increment_speed = max(self.auto_increment_speed // 2, self.min_increment_speed)  # Double the speed, respecting minimum limit
+            self.auto_increment_button.config(text="Buy Auto-Increment (Cost: 50)", state=tk.NORMAL)
 
-# Upgrade auto-increment amount button
-amount_upgrade_button = tk.Button(root, text=f"Upgrade Amount (Cost: {amount_upgrade_cost})", command=upgrade_amount)
-amount_upgrade_button.pack()
+            # Apply benefits of reset
+            self.reset_cost *= 3
+            self.reset_count += 1
+            self.auto_increment_amount = self.base_increment_amount * (2 ** self.reset_count)
 
-# Reset button
-reset_button = tk.Button(root, text=f"Reset (Cost: {reset_cost})", command=reset_game)
-reset_button.pack()
+            # Update UI
+            self.reset_button.config(text=f"Reset (Cost: {self.reset_cost})")
+            self.reset_count_label.config(text=f"Resets: {self.reset_count}")
+            self.update_score(0)
 
-# Reset count label
-reset_count_label = tk.Label(root, text="Resets: 0")
-reset_count_label.pack()
+def open_new_box():
+    new_box_root = tk.Toplevel()
+    new_box_game = BoxGame(new_box_root, "New Box", score_multiplier=3, upgrade_multiplier=2)
 
-root.mainloop()
+# Main game setup
+main_root = tk.Tk()
+main_game = BoxGame(main_root, "The Box")
+
+# New Box upgrade button
+new_box_button = tk.Button(main_root, text="New Box (Cost: 1000)", command=open_new_box)
+new_box_button.pack()
+
+main_root.mainloop()
