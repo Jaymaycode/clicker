@@ -10,7 +10,7 @@ def update_score():
     score += 1
     score_label.config(text="Score: " + str(score))
 
-cookie_btn = tk.Button(root, text="🍪 Cookie", command=update_score)
+cookie_btn = tk.Button(root, text="📦 Box", command=update_score)
 cookie_btn.pack()
 
 score_label = tk.Label(root, text="Score: 0")
