@@ -3,7 +3,7 @@ import tkinter as tk
 class BoxGame:
     def __init__(self, root, title, score_multiplier=1, upgrade_multiplier=1, transfer_score_callback=None):
         self.root = root
-        self.title = title
+        self.root.title(title)
         self.transfer_score_callback = transfer_score_callback
         self.score = 0
         self.score_per_click = 1
@@ -11,7 +11,7 @@ class BoxGame:
         self.upgrade_multiplier = upgrade_multiplier
         self.auto_increment_cost = 50 * upgrade_multiplier
         self.auto_increment_active = False
-        self.auto_increment_amount = 0.1
+        self.auto_increment_amount = 0.1 * score_multiplier
         self.auto_increment_speed = 1000  # in milliseconds
         self.min_increment_speed = 100  # minimum speed limit
         self.reset_cost = 100
@@ -23,40 +23,31 @@ class BoxGame:
         self.setup_ui()
 
     def setup_ui(self):
-        # Clickable box button
         box_btn = tk.Button(self.root, text="📦 Box", command=lambda: self.update_score(self.score_per_click))
         box_btn.pack()
 
-        # Score label
         self.score_label = tk.Label(self.root, text="Score: 0")
         self.score_label.pack()
 
-        # Upgrade click button
         self.upgrade_button = tk.Button(self.root, text=f"Upgrade Click (Cost: {self.upgrade_cost})", command=self.purchase_click_upgrade)
         self.upgrade_button.pack()
 
-        # Auto-increment button
         self.auto_increment_button = tk.Button(self.root, text=f"Buy Auto-Increment (Cost: {self.auto_increment_cost})", command=self.purchase_auto_increment)
         self.auto_increment_button.pack()
 
-        # Upgrade auto-increment speed button
         self.speed_upgrade_button = tk.Button(self.root, text=f"Upgrade Speed (Cost: {self.speed_upgrade_cost})", command=self.upgrade_speed)
         self.speed_upgrade_button.pack()
 
-        # Upgrade auto-increment amount button
         self.amount_upgrade_button = tk.Button(self.root, text=f"Upgrade Amount (Cost: {self.amount_upgrade_cost})", command=self.upgrade_amount)
         self.amount_upgrade_button.pack()
 
-        # Reset button
         self.reset_button = tk.Button(self.root, text=f"Reset (Cost: {self.reset_cost})", command=self.reset_game)
         self.reset_button.pack()
 
-        # Reset count label
         self.reset_count_label = tk.Label(self.root, text="Resets: 0")
         self.reset_count_label.pack()
 
-        # Transfer score button (only for "New Box")
-        if self.title != "The Box":
+        if self.root.title() != "The Box":
             transfer_button = tk.Button(self.root, text="Transfer Score to The Box", command=self.transfer_score)
             transfer_button.pack()
 
@@ -125,27 +116,32 @@ class BoxGame:
             self.update_score(0)
 
     def close_box(self):
-        self.transfer_score_callback(self.score * 3)  # Transfer and triple the score
-        self.root.destroy()
+        if self.transfer_score_callback:
+            self.transfer_score_callback(self.score * 3)  # Transfer and triple the score
+            self.root.destroy()
 
-def open_new_box(new_box_cost, update_new_box_cost, transfer_score_to_main):
-    new_box_root = tk.Toplevel()
-    new_box_game = BoxGame(new_box_root, "New Box", score_multiplier=new_box_cost, upgrade_multiplier=2, transfer_score_callback=transfer_score_to_main)
-    update_new_box_cost(new_box_cost * 3)
+def open_new_box(new_box_cost, update_new_box_cost, transfer_score_to_main, main_game):
+    if main_game.score >= new_box_cost:  # Check if the player has enough score
+        main_game.score -= new_box_cost  # Subtract the cost
+        main_game.update_score(0)
+        new_box_root = tk.Toplevel()
+        new_box_multiplier = main_game.score_per_click * 3  # Triple the current score rate of 'The Box'
+        new_box_game = BoxGame(new_box_root, "New Box", score_multiplier=new_box_multiplier, upgrade_multiplier=2, transfer_score_callback=transfer_score_to_main)
+        update_new_box_cost(new_box_cost * 3)
 
 def transfer_score_to_main(amount):
     main_game.score += amount
     main_game.update_score(0)
 
 def update_new_box_cost(new_cost):
-    new_box_button.config(text=f"New Box (Cost: {new_cost})", command=lambda: open_new_box(new_cost, update_new_box_cost, transfer_score_to_main))
+    new_box_button.config(text=f"New Box (Cost: {new_cost})", command=lambda: open_new_box(new_cost, update_new_box_cost, transfer_score_to_main, main_game))
 
 # Main game setup
 main_root = tk.Tk()
 main_game = BoxGame(main_root, "The Box")
 
 # New Box upgrade button
-new_box_button = tk.Button(main_root, text="New Box (Cost: 1000)", command=lambda: open_new_box(1000, update_new_box_cost, transfer_score_to_main))
+new_box_button = tk.Button(main_root, text="New Box (Cost: 1000)", command=lambda: open_new_box(1000, update_new_box_cost, transfer_score_to_main, main_game))
 new_box_button.pack()
 
 main_root.mainloop()
