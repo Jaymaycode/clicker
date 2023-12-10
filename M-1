@@ -18,7 +18,8 @@ amount_upgrade_cost = 40
 def update_score(amount=1):
     global score
     score += amount
-    score_label.config(text="Score: " + str(score))
+    rounded_score = round(score)  # Round the score to the nearest whole number
+    score_label.config(text="Score: " + str(rounded_score))
 
 # Auto-increment function
 def auto_increment():
