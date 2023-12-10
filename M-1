@@ -3,37 +3,59 @@ import tkinter as tk
 root = tk.Tk()
 root.title("The Box")
 
-# Initial score and upgrade variables
+# Initial score, upgrades, and auto-increment variables
 score = 0
 score_per_click = 1
 upgrade_cost = 10
+auto_increment_cost = 50
+auto_increment_active = False
 
-# Function to update score when the box is clicked
-def update_score():
+# Function to update score
+def update_score(amount=1):
     global score
-    score += score_per_click
+    score += amount
     score_label.config(text="Score: " + str(score))
 
-# Function to purchase an upgrade
-def purchase_upgrade():
+# Auto-increment function
+def auto_increment():
+    if auto_increment_active:
+        update_score()
+        root.after(1000, auto_increment)  # Schedule itself to run again after 1 second
+
+# Function to purchase click upgrade
+def purchase_click_upgrade():
     global score, score_per_click, upgrade_cost
     if score >= upgrade_cost:
         score -= upgrade_cost
-        score_per_click += 1  # Increase score per click with each upgrade
-        upgrade_cost *= 2  # Double the cost for the next upgrade
-        upgrade_button.config(text=f"Upgrade (Cost: {upgrade_cost})")
+        score_per_click += 1
+        upgrade_cost *= 2
+        upgrade_button.config(text=f"Upgrade Click (Cost: {upgrade_cost})")
         score_label.config(text="Score: " + str(score))
 
+# Function to purchase auto-increment upgrade
+def purchase_auto_increment():
+    global score, auto_increment_cost, auto_increment_active
+    if score >= auto_increment_cost and not auto_increment_active:
+        score -= auto_increment_cost
+        auto_increment_active = True
+        auto_increment_button.config(text="Auto-Increment Active", state=tk.DISABLED)
+        score_label.config(text="Score: " + str(score))
+        auto_increment()  # Start the auto-increment process
+
 # Clickable box button
-box_btn = tk.Button(root, text="📦 Box", command=update_score)
+box_btn = tk.Button(root, text="📦 Box", command=lambda: update_score(score_per_click))
 box_btn.pack()
 
-# Score label to display current score
+# Score label
 score_label = tk.Label(root, text="Score: 0")
 score_label.pack()
 
-# Upgrade button to improve the box's score
-upgrade_button = tk.Button(root, text=f"Upgrade (Cost: {upgrade_cost})", command=purchase_upgrade)
+# Upgrade click button
+upgrade_button = tk.Button(root, text=f"Upgrade Click (Cost: {upgrade_cost})", command=purchase_click_upgrade)
 upgrade_button.pack()
+
+# Upgrade auto-increment button
+auto_increment_button = tk.Button(root, text=f"Auto-Increment (Cost: {auto_increment_cost})", command=purchase_auto_increment)
+auto_increment_button.pack()
 
 root.mainloop()
