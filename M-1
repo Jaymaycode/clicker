@@ -15,12 +15,13 @@ speed_upgrade_cost = 30
 amount_upgrade_cost = 40
 reset_cost = 100
 reset_count = 0
+base_increment_amount = 0.1  # Base amount for auto-increment
 
 # Function to update score
 def update_score(amount=1):
     global score
     score += amount
-    rounded_score = round(score)  # Round the score to the nearest whole number
+    rounded_score = round(score)
     score_label.config(text="Score: " + str(rounded_score))
 
 # Auto-increment function
@@ -42,12 +43,12 @@ def purchase_click_upgrade():
 
 # Function to purchase auto-increment upgrade
 def purchase_auto_increment():
-    global score, auto_increment_cost, auto_increment_active
+    global score, auto_increment_active
     if score >= auto_increment_cost and not auto_increment_active:
         score -= auto_increment_cost
         auto_increment_active = True
         auto_increment_button.config(text="Auto-Increment Active", state=tk.DISABLED)
-        auto_increment()  # Start the auto-increment process
+        auto_increment()
 
 # Function to upgrade auto-increment speed
 def upgrade_speed():
@@ -69,17 +70,25 @@ def upgrade_amount():
         amount_upgrade_button.config(text=f"Upgrade Amount (Cost: {amount_upgrade_cost})")
         score_label.config(text="Score: " + str(score))
 
-# Function to reset and enhance auto-click
+# Function to reset the game
 def reset_game():
-    global score, reset_cost, reset_count, auto_increment_amount
+    global score, reset_cost, reset_count, auto_increment_amount, auto_increment_active, score_per_click
     if score >= reset_cost:
-        score -= reset_cost
-        reset_cost *= 3  # Triple the cost for the next reset
+        # Reset score and all upgrades
+        score = 0
+        score_per_click = 1
+        auto_increment_active = False
+        auto_increment_button.config(text="Buy Auto-Increment (Cost: 50)", state=tk.NORMAL)
+
+        # Apply benefits of reset
+        reset_cost *= 3
         reset_count += 1
-        auto_increment_amount *= 2  # Double the auto-click amount
+        auto_increment_amount = base_increment_amount * (2 ** reset_count)
+
+        # Update UI
         reset_button.config(text=f"Reset (Cost: {reset_cost})")
         reset_count_label.config(text=f"Resets: {reset_count}")
-        update_score(0)  # Update score display
+        update_score(0)
 
 # Clickable box button
 box_btn = tk.Button(root, text="📦 Box", command=lambda: update_score(score_per_click))
@@ -93,8 +102,8 @@ score_label.pack()
 upgrade_button = tk.Button(root, text=f"Upgrade Click (Cost: {upgrade_cost})", command=purchase_click_upgrade)
 upgrade_button.pack()
 
-# Upgrade auto-increment button
-auto_increment_button = tk.Button(root, text=f"Auto-Increment (Cost: {auto_increment_cost})", command=purchase_auto_increment)
+# Auto-increment button
+auto_increment_button = tk.Button(root, text=f"Buy Auto-Increment (Cost: 50)", command=purchase_auto_increment)
 auto_increment_button.pack()
 
 # Upgrade auto-increment speed button
