@@ -20,9 +20,11 @@ class BoxGame:
         self.upgrade_cost = 10 * upgrade_multiplier
         self.speed_upgrade_cost = 30 * upgrade_multiplier
         self.amount_upgrade_cost = 40 * upgrade_multiplier
+        self.punch_box_cost = 50000
         self.setup_ui()
 
     def setup_ui(self):
+        self.root.geometry('300x200')  # Smaller window size
         self.root.configure(bg='light grey')
         padding = {'padx': 5, 'pady': 5}
         button_frame = tk.Frame(self.root, bg='light grey')
@@ -59,6 +61,9 @@ class BoxGame:
 
             close_box_button = tk.Button(button_frame, text="Close Box", command=self.close_box)
             close_box_button.grid(row=4, column=1, **padding)
+
+            punch_box_button = tk.Button(button_frame, text="Punch Box", command=self.punch_box)
+            punch_box_button.grid(row=5, column=0, **padding)
 
     def update_score(self, amount=1):
         self.score += amount * self.score_multiplier
@@ -126,6 +131,12 @@ class BoxGame:
             self.transfer_score_callback(self.score * 3)  # Transfer and triple the score
             self.root.destroy()
 
+    def punch_box(self):
+        if self.score >= self.punch_box_cost:
+            self.score -= self.punch_box_cost
+            self.auto_increment_amount /= 2
+            self.update_score(0)
+
 def open_new_box(new_box_cost, update_new_box_cost, transfer_score_to_main, main_game):
     if main_game.score >= new_box_cost:  # Check if the player has enough score
         main_game.score -= new_box_cost  # Subtract the cost
@@ -136,18 +147,34 @@ def open_new_box(new_box_cost, update_new_box_cost, transfer_score_to_main, main
         update_new_box_cost(new_box_cost * 3)
 
 def transfer_score_to_main(amount):
-    main_game.score += amount
+    main_game.score += amount * 2  # Double the score rate for 'The Box'
     main_game.update_score(0)
 
 def update_new_box_cost(new_cost):
     new_box_button.config(text=f"New Box (Cost: {new_cost})", command=lambda: open_new_box(new_cost, update_new_box_cost, transfer_score_to_main, main_game))
 
-# Main game setup
-main_root = tk.Tk()
-main_game = BoxGame(main_root, "The Box")
+def start_game():
+    main_root = tk.Tk()
+    main_game = BoxGame(main_root, "The Box")
+    start_window.destroy()
 
-# New Box upgrade button
-new_box_button = tk.Button(main_root, text="New Box (Cost: 1000)", command=lambda: open_new_box(1000, update_new_box_cost, transfer_score_to_main, main_game))
-new_box_button.pack()
+# Starting window setup
+def create_start_window():
+    global start_window
+    start_window = tk.Tk()
+    start_window.title("THE BOX")
 
-main_root.mainloop()
+    start_window_width = 200
+    start_window_height = 100
+    screen_width = start_window.winfo_screenwidth()
+    screen_height = start_window.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (start_window_width / 2))
+    y_coordinate = int((screen_height / 2) - (start_window_height / 2))
+
+    start_window.geometry(f"{start_window_width}x{start_window_height}+{x_coordinate}+{y_coordinate}")
+
+    start_button = tk.Button(start_window, text="Start", command=start_game)
+    start_button.pack(pady=20)
+    start_window.mainloop()
+
+create_start_window()
